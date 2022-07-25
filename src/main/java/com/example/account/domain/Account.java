@@ -1,8 +1,14 @@
 package com.example.account.domain;
 
+import com.example.account.exception.AccountException;
+import com.example.account.type.AccountStatus;
 import lombok.*;
 
 import javax.persistence.*;
+import java.time.LocalDateTime;
+
+import static com.example.account.type.ErrorCode.AMOUNT_EXCEED_BALANCE;
+import static com.example.account.type.ErrorCode.INVALID_REQUEST;
 
 @Getter
 @Setter
@@ -10,13 +16,30 @@ import javax.persistence.*;
 @AllArgsConstructor
 @Builder
 @Entity
-public class Account {
-    @Id
-    @GeneratedValue
-    private Long id;
-
-    private String accountNumber;
+public class Account extends BaseEntity {
+    @ManyToOne
+    private AccountUser accountUser; //충돌이 일어날 수 있으므로 au로 생성
+    private String  accountNumber;
 
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus;
+    private Long balance;
+
+    private LocalDateTime registeredAt;
+    private LocalDateTime unRegisteredAt;
+    public void useBalance(Long amount) {
+        if(amount > balance) {
+            throw new AccountException(AMOUNT_EXCEED_BALANCE);
+        }
+        balance -= amount;
+    }
+
+    public void cancelBalance(Long amount) {
+        if(amount < 0) {
+            throw new AccountException(INVALID_REQUEST);
+        }
+        balance += amount;
+    }
+
+
 }
